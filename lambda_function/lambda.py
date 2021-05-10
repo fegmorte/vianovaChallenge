@@ -5,10 +5,14 @@ import boto3
 import os
 import urllib
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def lambda_handler(event, context):
-    print('Starting gbfsIngester')
+    logger.info('Starting gbfsIngester')
 
     # Declare variables before assignment
     bike_status = ''
@@ -17,11 +21,11 @@ def lambda_handler(event, context):
     bucket_name = os.getenv('S3_BUCKET_NAME')
     url = os.getenv('URL')
 
-    print(f'Request the url : {url}')
+    logger.info(f'Request the url : {url}')
     try:
         r = urllib.request.urlopen(url)
     except urllib.error.HTTPError as error:
-        print(f'ERROR - Error code : {error.code} - Error message : {error.read()}')
+        logger.error(f'Error code : {error.code} - Error message : {error.read()}')
         return {
             "statusCode": 400
         }
@@ -41,14 +45,13 @@ def lambda_handler(event, context):
         s3.Bucket(bucket_name).objects.filter(Prefix='bikes/bike/').delete()
 
     except botocore.exceptions.ClientError as error:
-        print(
-            f'ERROR - Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
+        logger.error(f'Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
         return {
             "statusCode": 400
         }
 
     # Loop through the bikes data and ingest each bike status
-    print('Storing bikes data in progress .....')
+    logger.info('Storing bikes data in progress .....')
     for bike in bikes_data['bikes']:
         bike_id = bike['bike_id']
         if bike['is_disabled'] == 0 and bike['is_reserved'] == 0:
@@ -67,8 +70,7 @@ def lambda_handler(event, context):
             #Storing each bike data in a specific path in the bucket
             s3.Bucket(bucket_name).put_object(Key=bike_file, Body=bike, Tagging=tags)
         except botocore.exceptions.ClientError as error:
-            print(
-                f'ERROR - Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
+            logger.error(f'Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
             return {
                 "statusCode": 400
             }
@@ -79,16 +81,15 @@ def lambda_handler(event, context):
     try:
         s3.Bucket(bucket_name).put_object(Key=bikes_file, Body=json_data)
     except botocore.exceptions.ClientError as error:
-        print(
-            f'ERROR - Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
+        logger.error(f'Error code : {error.response["Error"]["Code"]} - Error message : {error.response["Error"]["Message"]}')
         return {
             "statusCode": 400
         }
 
     # Return 200 at the end
-    print(f'{nb_bike} bikes data stored in the bucket : {bucket_name}')
-    print('Global file stored')
-    print(f'SUCCESS - Ingestion GBFS data OK ')
+    logger.info(f'{nb_bike} bikes data stored in the bucket : {bucket_name}')
+    logger.info('Global file stored')
+    logger.info(f'SUCCESS - Ingestion GBFS data OK ')
     return {
         "statusCode": 200
     }
