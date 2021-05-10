@@ -1,1 +1,7 @@
 .idea
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+.env
+./lambda_dist_pkg
+.zip
