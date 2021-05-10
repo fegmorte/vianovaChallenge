@@ -5,3 +5,9 @@
 .env
 ./lambda_dist_pkg
 .zip
+/lambda_dist_pkg/lambda_function/__init__.py
+/lambda_dist_pkg/lambda_function/lambda.py
+/lambda_function.zip
+/.terraform/providers/registry.terraform.io/hashicorp/archive/2.2.0/linux_amd64/terraform-provider-archive_v2.2.0_x5
+/.terraform/providers/registry.terraform.io/hashicorp/aws/3.39.0/linux_amd64/terraform-provider-aws_v3.39.0_x5
+/.terraform/providers/registry.terraform.io/hashicorp/null/3.1.0/linux_amd64/terraform-provider-null_v3.1.0_x5
