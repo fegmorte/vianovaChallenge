@@ -22,7 +22,7 @@ data "archive_file" "create_alert_dist_pkg" {
 resource "aws_lambda_function" "aws_lambda_alert" {
   function_name = var.alert_function_name
   description = "Check if error in gbfs ingester and send email"
-  handler = "lambda_alert.alert_function.lambda_handler"
+  handler = "lambda_alert.alerting_function.lambda_handler"
   runtime = var.runtime
 
   role = aws_iam_role.lambda_exec_role.arn
