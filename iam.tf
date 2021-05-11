@@ -244,3 +244,90 @@ resource "aws_iam_role_policy_attachment" "sns_policy_attachment" {
   policy_arn = aws_iam_policy.sns_iam_policy.arn
   role = aws_iam_role.sns_role_check_error.name
 }
+
+#---------------------------------------------------------------------------
+# LAMBDA IAM Role & Policy
+resource "aws_iam_role" "alert_lambda_exec_role" {
+  name = "alert_lambda_exec_role"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      }
+    }
+  ]
+}
+EOF
+}
+
+data "aws_iam_policy_document" "alert_lambda_policy_doc" {
+
+    statement {
+    sid = "AllowSnsPublish"
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:sns:*:*:sns-gbfs-error"
+    ]
+
+    actions = [
+      "sns:Publish",
+      "logs:PutLogEvents",
+    ]
+  }
+
+  statement {
+    sid = "AllowInvokingLambdas"
+    effect = "Allow"
+
+    resources = [
+      "*"
+    ]
+
+    actions = [
+      "lambda:InvokeFunction"
+    ]
+  }
+
+  statement {
+    sid = "AllowCreatingLogGroups"
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:logs:*:*:*"
+    ]
+
+    actions = [
+      "logs:CreateLogGroup"
+    ]
+  }
+
+  statement {
+    sid = "AllowWritingLogs"
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:logs:*:*:log-group:/aws/lambda/*:*"
+    ]
+
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+  }
+}
+
+resource "aws_iam_policy" "alert_lambda_iam_policy" {
+  name = "alert_lambda_iam_policy"
+  policy = data.aws_iam_policy_document.alert_lambda_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "alert_lambda_policy_attachment" {
+  policy_arn = aws_iam_policy.alert_lambda_iam_policy.arn
+  role = aws_iam_role.alert_lambda_exec_role.name
+}

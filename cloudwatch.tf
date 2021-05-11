@@ -39,17 +39,19 @@ resource "aws_cloudwatch_log_group" "alert-logging" {
 #CW Permission to call lambda alert function
 resource "aws_lambda_permission" "alert_allow_cw" {
   statement_id  = "AllowAlertExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.aws_lambda_alert.arn
   principal     = "logs.eu-central-1.amazonaws.com"
+  action        = "lambda:InvokeFunction"
   source_arn    = aws_cloudwatch_log_group.gbfs-ingester-logging.arn
 }
 
-#CW Trigger alert on log
-resource "aws_cloudwatch_log_subscription_filter" "alert_error_gbfs" {
-  depends_on = [aws_lambda_permission.alert_allow_cw]
-  name = "alert_error_gbfs"
-  log_group_name = aws_cloudwatch_log_group.gbfs-ingester-logging.name
-  filter_pattern = "ERROR"
-  destination_arn = aws_lambda_function.aws_lambda_alert.arn
-}
+//------------------------------------------------------------------------
+//BUG ON THIS METHOD TO CREATE LOG SUBSCRIPTION
+//#CW Trigger alert on log
+//resource "aws_cloudwatch_log_subscription_filter" "alert_error_gbfs" {
+//  depends_on = [aws_lambda_permission.alert_allow_cw]
+//  name = "alertFilter"
+//  log_group_name = aws_cloudwatch_log_group.gbfs-ingester-logging.name
+//  filter_pattern = "ERROR"
+//  destination_arn = aws_lambda_function.aws_lambda_alert.arn
+//}

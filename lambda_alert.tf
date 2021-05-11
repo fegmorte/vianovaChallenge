@@ -25,7 +25,7 @@ resource "aws_lambda_function" "aws_lambda_alert" {
   handler = "lambda_alert.alerting_function.lambda_handler"
   runtime = var.runtime
 
-  role = aws_iam_role.lambda_exec_role.arn
+  role = aws_iam_role.alert_lambda_exec_role.arn
   memory_size = 128
   timeout = 59
 
