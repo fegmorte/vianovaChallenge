@@ -1,3 +1,5 @@
+#---------------------------------------------------------------------------
+# LAMBDA IAM Role & Policy
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda_exec_role"
   assume_role_policy = <<EOF
@@ -121,7 +123,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
     ]
 
   resources = [
-      "arn:aws:logs:eu-central-1:*:*",
+      "arn:aws:logs:*:*:*",
       "arn:aws:s3:*:*:storage-lens/*",
       "arn:aws:s3:*:*:job/*",
       "arn:aws:s3-object-lambda:*:*:accesspoint/*",
@@ -136,7 +138,7 @@ data "aws_iam_policy_document" "lambda_policy_doc" {
     effect = "Allow"
 
     resources = [
-      "arn:aws:lambda:*:*:function:*"
+      "*"
     ]
 
     actions = [
@@ -180,4 +182,65 @@ resource "aws_iam_policy" "lambda_iam_policy" {
 resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
   policy_arn = aws_iam_policy.lambda_iam_policy.arn
   role = aws_iam_role.lambda_exec_role.name
+}
+
+#---------------------------------------------------------------------------
+# SNS IAM Role & Policy
+resource "aws_iam_role" "sns_role_check_error" {
+  name = "sns_role_check_error"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "sns.amazonaws.com"
+      }
+    }
+  ]
+}
+EOF
+}
+
+data "aws_iam_policy_document" "sns_policy_doc" {
+  statement {
+    sid = "AllowSnsPublish"
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:sns:*:*:sns-gbfs-error"
+    ]
+
+    actions = [
+      "sns:Publish",
+      "logs:PutLogEvents",
+    ]
+  }
+
+    statement {
+    sid = "AllowWritingLogs"
+    effect = "Allow"
+
+    resources = [
+      "arn:aws:logs:*:*:log-group:/aws/lambda/aws_lambda_alert:*"
+    ]
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "sns_iam_policy" {
+  name = "sns_iam_policy"
+  policy = data.aws_iam_policy_document.sns_policy_doc.json
+}
+
+resource "aws_iam_role_policy_attachment" "sns_policy_attachment" {
+  policy_arn = aws_iam_policy.sns_iam_policy.arn
+  role = aws_iam_role.sns_role_check_error.name
 }

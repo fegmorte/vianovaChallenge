@@ -26,3 +26,30 @@ resource "aws_cloudwatch_log_group" "gbfs-ingester-logging" {
   name              = "/aws/lambda/${var.function_name}"
   retention_in_days = 14
 }
+
+#-------------------------------------------------------------------------------
+#CLOUDWATCH PART FOR ALERT LAMBDA
+#
+#Log group alerting for lambda function
+resource "aws_cloudwatch_log_group" "alert-logging" {
+  name              = "/aws/lambda/${var.alert_function_name}"
+  retention_in_days = 14
+}
+
+#CW Permission to call lambda alert function
+resource "aws_lambda_permission" "alert_allow_cw" {
+  statement_id  = "AllowAlertExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.aws_lambda_alert.arn
+  principal     = "logs.eu-central-1.amazonaws.com"
+  source_arn    = aws_cloudwatch_log_group.gbfs-ingester-logging.arn
+}
+
+#CW Trigger alert on log
+resource "aws_cloudwatch_log_subscription_filter" "alert_error_gbfs" {
+  depends_on = [aws_lambda_permission.alert_allow_cw]
+  name = "alert_error_gbfs"
+  log_group_name = aws_cloudwatch_log_group.gbfs-ingester-logging.name
+  filter_pattern = "ERROR"
+  destination_arn = aws_lambda_function.aws_lambda_alert.arn
+}
