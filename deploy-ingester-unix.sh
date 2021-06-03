@@ -1,5 +1,4 @@
 #!/bin/bash
-
 echo "----------------------------------------------------------------------------"
 echo "Starting deploy-ingester"
 echo "terraform init -input=false"
@@ -8,7 +7,6 @@ terraform init -input=false
 terraform plan -input=false
 
 terraform apply -auto-approve
-
 echo "----------------------------------------------------------------------------"
 echo "Trying to add lambda permission and subscription filter via AWS CLI"
 echo "Adding lambda permission via AWS CLI"
@@ -27,7 +25,6 @@ aws logs put-subscription-filter \
         --filter-name "alertFilter" \
         --filter-pattern "ERROR" \
         --destination-arn "arn:aws:lambda:eu-central-1:"${id_caller}":function:aws_lambda_alert"
-
 echo "----------------------------------------------------------------------------"
 echo "SUCCES - GBFS ingester deployed !"
 echo "BE CAREFUL - Think to confirm your SNS Subscription email in order to receive alert ! "
